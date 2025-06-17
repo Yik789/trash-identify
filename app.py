@@ -6,7 +6,6 @@ from tensorflow.keras.models import load_model
 from PIL import Image
 import numpy as np
 import json
-import tempfile
 
 app = Flask(__name__)
 
@@ -94,17 +93,12 @@ def preprocess_image(file_stream):
 @app.route('/predict', methods=['POST'])
 def predict():
     if 'file' not in request.files:
-        return jsonify({'error': 'No file uploaded'}), 400
+        return jsonify({'error': '没有上传文件'}), 400
     file = request.files['file']
 
-    temp_file_path = None
     try:
-        with tempfile.NamedTemporaryFile(delete=False, suffix='.jpg') as tmp_file:
-            file.save(tmp_file)
-            temp_file_path = tmp_file.name
-
-        with open(temp_file_path, 'rb') as temp_image_stream:
-            img_array = preprocess_image(temp_image_stream)
+        # 直接在内存中处理图像，避免使用临时文件
+        img_array = preprocess_image(file.stream)
 
         preds = model.predict(img_array)[0]
         predicted_idx_numeric = int(np.argmax(preds))
@@ -120,11 +114,11 @@ def predict():
             "confidence": confidence
         })
     except Exception as e:
-        return jsonify({'error': f'Image processing error: {str(e)}'}), 500
-    finally:
-        if temp_file_path and os.path.exists(temp_file_path):
-            os.remove(temp_file_path)
+        app.logger.error(f'处理图像时出错: {str(e)}')
+        return jsonify({'error': f'图像处理错误: {str(e)}'}), 500
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+    # 从环境变量获取端口，默认为5000
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port)
