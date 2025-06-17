@@ -1,0 +1,36 @@
+<!-- pages/index/index.wxml -->
+<view class="container">
+  <view class="title">垃圾分类识别</view>
+  
+  <view class="image-preview-area">
+    <image 
+      wx:if="{{imagePath}}" 
+      src="{{imagePath}}" 
+      class="selected-image" 
+      mode="aspectFit"
+    />
+    <text wx:else class="placeholder-text">请选择图片进行识别</text>
+  </view>
+  
+  <view class="button-area">
+    <button 
+      class="choose-image-btn" 
+      bindtap="chooseImage"
+      loading="{{isLoading}}"
+      disabled="{{isLoading}}"
+    >{{isLoading ? '识别中...' : '选择图片'}}</button>
+  </view>
+  
+  <view wx:if="{{predictionResult}}" class="result-area">
+    <view class="result-item">
+      <text class="result-label">分类结果:</text>
+      <text class="result-value category-{{predictionResult.category_en}}">
+        {{predictionResult.category}}
+      </text>
+    </view>
+    <view class="result-item">
+      <text class="result-label">置信度:</text>
+      <text class="result-value">{{confidencePercentage}}%</text>
+    </view>
+  </view>
+</view>
